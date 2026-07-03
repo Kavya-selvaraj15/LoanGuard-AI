@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block title %}Scam Reports – LoanGuard AI{% endblock %}
+{% block page_title %}Scam Reports{% endblock %}
+{% block page_sub %}Browse and review community reported scam apps{% endblock %}
+{% block topbar_actions %}<a href="/community/submit/" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Report App</a>{% endblock %}
+
+{% block extra_css %}
+<style>
+.rep-toolbar{padding:12px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.rep-search{position:relative;flex:1;max-width:260px;}
+.rep-search i{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text2);font-size:11px;}
+.rep-search input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:7px 11px 7px 28px;color:var(--text);font-family:'Inter',sans-serif;font-size:11px;outline:none;}
+.rep-sel{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:7px 11px;color:var(--text);font-family:'Inter',sans-serif;font-size:11px;outline:none;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="rep-toolbar">
+    <div class="rep-search"><i class="fas fa-search"></i><input type="text" placeholder="Search reports..."></div>
+    <select class="rep-sel">
+      <option>All Status</option><option>Under Review</option><option>Confirmed</option><option>Dismissed</option>
+    </select>
+  </div>
+  {% if reports %}
+  <table class="tbl">
+    <thead>
+      <tr><th>App Name</th><th>Reported By</th><th>Risk Level</th><th>Reports</th><th>Status</th><th>Last Reported</th><th>Action</th></tr>
+    </thead>
+    <tbody>
+      {% for report in reports %}
+      <tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:9px;">
+            <div style="width:26px;height:26px;border-radius:6px;background:rgba(255,71,87,.15);display:flex;align-items:center;justify-content:center;font-size:13px;">📱</div>
+            <div>
+              <div style="font-size:12px;font-weight:600;">{{ report.app_name }}</div>
+              {% if report.package_name %}<div style="font-size:10px;color:var(--text2);font-family:monospace;">{{ report.package_name }}</div>{% endif %}
+            </div>
+          </div>
+        </td>
+        <td style="font-size:11px;color:var(--text2)">{{ report.reported_by.username }}</td>
+        <td><span class="badge badge-dangerous">High</span></td>
+        <td style="font-size:12px;font-weight:600;">{{ report.upvotes|default:"1" }}</td>
+        <td>
+          {% if report.status == 'verified' %}<span class="badge badge-confirmed">Confirmed</span>
+          {% elif report.status == 'pending' %}<span class="badge badge-review">Under Review</span>
+          {% else %}<span class="badge badge-dismissed">Dismissed</span>{% endif %}
+        </td>
+        <td style="font-size:11px;color:var(--text2)">{{ report.created_at|date:"M d, Y" }}</td>
+        <td><a href="#" class="btn btn-outline btn-sm">View</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div style="padding:70px;text-align:center;">
+    <div style="font-size:40px;margin-bottom:14px;opacity:.3">🚩</div>
+    <div style="font-size:15px;font-weight:700;margin-bottom:6px;">No reports yet</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:18px;">Be the first to report a suspicious loan app!</div>
+    <a href="/community/submit/" class="btn btn-primary"><i class="fas fa-plus"></i> Submit First Report</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

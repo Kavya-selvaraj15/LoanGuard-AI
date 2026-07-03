@@ -1,0 +1,235 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Scan APK – LoanGuard AI{% endblock %}
+{% block page_title %}Scan APK / App{% endblock %}
+{% block page_sub %}Upload an APK file to analyze for potential fraud{% endblock %}
+{% block topbar_actions %}<a href="/apk/history/" class="btn btn-outline btn-sm"><i class="fas fa-clock"></i> History</a>{% endblock %}
+
+{% block extra_css %}
+<style>
+.scan-layout{display:grid;grid-template-columns:1fr 2fr;gap:18px;margin-bottom:18px;}
+.status-cards{display:grid;grid-template-columns:1fr;gap:10px;}
+.st-card{
+  background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:14px 16px;display:flex;align-items:center;gap:12px;
+}
+.st-ico{
+  width:38px;height:38px;border-radius:9px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:16px;
+}
+.st-ico.blue{background:rgba(79,110,247,.15);}
+.st-ico.green{background:rgba(46,213,115,.15);}
+.st-ico.cyan{background:rgba(0,212,170,.15);}
+.st-label{font-size:11px;color:var(--text2);}
+.st-val{font-size:13px;font-weight:700;}
+.active-dot{width:7px;height:7px;border-radius:50%;background:var(--safe);display:inline-block;margin-right:5px;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+.upload-card{background:var(--card);border:1px solid var(--border);border-radius:12px;}
+.upload-head{padding:16px 20px;border-bottom:1px solid var(--border);}
+.upload-head-title{font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px;}
+
+/* App name input */
+.app-name-row{
+  display:flex;background:var(--bg3);border:1px solid var(--border);border-radius:9px;overflow:hidden;
+  transition:border-color .2s,box-shadow .2s;margin-bottom:14px;
+}
+.app-name-row:focus-within{border-color:var(--primary);box-shadow:0 0 0 3px rgba(79,110,247,.1);}
+.app-logo-box{
+  width:54px;min-width:54px;border-right:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;background:var(--bg2);position:relative;
+}
+.app-logo-box img{width:34px;height:34px;border-radius:8px;object-fit:contain;display:none;}
+.logo-ph{font-size:22px;}
+.logo-spin{display:none;width:22px;height:22px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite;position:absolute;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.app-name-inp{flex:1;background:transparent;border:none;outline:none;padding:13px 14px;font-size:14px;font-weight:600;color:var(--text);font-family:'Inter',sans-serif;}
+.app-name-inp::placeholder{color:var(--text2);font-weight:400;}
+.found-tag{display:none;margin-right:12px;align-self:center;background:rgba(0,212,170,.1);color:var(--accent);padding:3px 8px;border-radius:5px;font-size:10px;font-weight:700;}
+
+/* Suggestions */
+.sg-wrap{position:relative;}
+.sg-list{
+  display:none;position:absolute;top:100%;left:0;right:0;
+  background:var(--card2);border:1px solid var(--border);border-radius:10px;
+  margin-top:4px;z-index:200;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.5);
+}
+.sg-item{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;font-size:12px;transition:background .15s;}
+.sg-item:hover{background:rgba(79,110,247,.1);}
+.sg-icon{width:26px;height:26px;border-radius:6px;object-fit:contain;}
+.sg-name{font-weight:600;}
+.sg-pkg{font-size:10px;color:var(--text2);}
+
+/* Drop zone */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.drop-zone{
+  border:2px dashed var(--border);border-radius:10px;padding:28px 16px;
+  text-align:center;cursor:pointer;transition:all .2s;background:var(--bg3);position:relative;
+}
+.drop-zone:hover,.drop-zone.over{border-color:var(--primary);background:rgba(79,110,247,.04);}
+.drop-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;}
+.drop-ico{font-size:28px;margin-bottom:8px;}
+.drop-txt{font-size:12px;font-weight:600;margin-bottom:3px;}
+.drop-sub{font-size:11px;color:var(--text2);}
+.drop-file{display:none;margin-top:8px;font-size:11px;color:var(--accent);font-weight:600;}
+
+.rev-area textarea{
+  width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;
+  padding:12px 14px;color:var(--text);font-family:'Inter',sans-serif;font-size:12px;
+  resize:vertical;min-height:110px;outline:none;line-height:1.6;transition:border-color .2s;
+}
+.rev-area textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(79,110,247,.1);}
+.rev-area textarea::placeholder{color:var(--text2);}
+
+.submit-btn{
+  width:100%;background:linear-gradient(135deg,var(--primary),var(--primary2));
+  color:#fff;border:none;border-radius:9px;padding:13px;
+  font-family:'Inter',sans-serif;font-size:13px;font-weight:700;
+  cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.submit-btn:hover{opacity:.9;transform:translateY(-1px);box-shadow:0 5px 20px rgba(79,110,247,.4);}
+</style>
+{% endblock %}
+
+{% block content %}
+<form method="POST" enctype="multipart/form-data" id="scanForm">
+{% csrf_token %}
+<div class="scan-layout">
+
+  <!-- LEFT: Status cards -->
+  <div class="status-cards">
+    <div class="st-card">
+      <div class="st-ico blue"><i class="fas fa-microchip"></i></div>
+      <div>
+        <div class="st-label">AI Engine</div>
+        <div class="st-val"><span class="active-dot"></span>Active</div>
+      </div>
+    </div>
+    <div class="st-card">
+      <div class="st-ico green"><i class="fas fa-comments"></i></div>
+      <div>
+        <div class="st-label">NLP Engine</div>
+        <div class="st-val"><span class="active-dot"></span>Active</div>
+      </div>
+    </div>
+    <div class="st-card">
+      <div class="st-ico cyan"><i class="fas fa-database"></i></div>
+      <div>
+        <div class="st-label">Database</div>
+        <div class="st-val"><span class="active-dot"></span>Connected</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Upload form -->
+  <div class="upload-card">
+    <div class="upload-head">
+      <div class="upload-head-title"><i class="fas fa-upload" style="color:var(--primary2)"></i> Upload & Analyze Loan App</div>
+    </div>
+    <div style="padding:18px 20px;">
+
+      <!-- APK drop zone (large, top) -->
+      <div class="drop-zone" id="dropZone" style="margin-bottom:14px;">
+        <input type="file" name="apk_file" id="apkFile" accept=".apk">
+        <div class="drop-ico">☁️</div>
+        <div class="drop-txt">Drag & drop your APK file here</div>
+        <div class="drop-sub">or <span style="color:var(--primary2);font-weight:600;">click to browse</span> &nbsp;·&nbsp; Supports .apk files · Max 50MB</div>
+        <div class="drop-file" id="fileName"></div>
+      </div>
+
+      <!-- App Name + Reviews side by side -->
+      <div class="two-col">
+        <div>
+          <label class="form-label">App Name (optional)</label>
+          <div class="sg-wrap">
+            <div class="app-name-row">
+              <div class="app-logo-box" id="logoBox">
+                <div class="logo-spin" id="logoSpin"></div>
+                <div class="logo-ph" id="logoPh">📱</div>
+                <img id="logoImg" src="" alt="">
+              </div>
+              <input type="text" name="app_name" id="appInp" class="app-name-inp" placeholder="e.g. QuickLoan, EasyCredit, FastCash..." autocomplete="off">
+              <span class="found-tag" id="foundTag">✓ Found</span>
+            </div>
+            <div class="sg-list" id="sgList"></div>
+          </div>
+        </div>
+        <div class="rev-area">
+          <label class="form-label">User Reviews (optional)</label>
+          <textarea name="reviews" placeholder="Paste user reviews here, one per line..."></textarea>
+        </div>
+      </div>
+
+      <button type="submit" class="submit-btn" id="submitBtn">
+        <i class="fas fa-search" id="submitIco"></i>
+        <span id="submitTxt">Analyze App</span>
+      </button>
+    </div>
+  </div>
+</div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const knownApps={
+  'phonepe':{logo:'https://logo.clearbit.com/phonepe.com',pkg:'com.phonepe.app'},
+  'paytm':{logo:'https://logo.clearbit.com/paytm.com',pkg:'net.one97.paytm'},
+  'google pay':{logo:'https://logo.clearbit.com/pay.google.com',pkg:'com.google.android.apps.nbu.paisa.user'},
+  'cred':{logo:'https://logo.clearbit.com/cred.club',pkg:'com.dreamplug.androidapp'},
+  'navi':{logo:'https://logo.clearbit.com/navi.com',pkg:'com.niyo.navi'},
+  'lazypay':{logo:'https://logo.clearbit.com/lazypay.in',pkg:'com.gocashfree.lazypay'},
+  'cashe':{logo:'https://logo.clearbit.com/cashe.co.in',pkg:'com.bhanix.cashe'},
+  'kreditbee':{logo:'https://logo.clearbit.com/kreditbee.in',pkg:'com.kreditbee'},
+  'moneyview':{logo:'https://logo.clearbit.com/moneyview.in',pkg:'com.whizdm.moneyview'},
+  'bajaj':{logo:'https://logo.clearbit.com/bajajfinserv.in',pkg:'org.altruist.BajajExperia'},
+  'slice':{logo:'https://logo.clearbit.com/sliceit.com',pkg:'com.slicepay'},
+  'fibe':{logo:'https://logo.clearbit.com/fibe.in',pkg:'com.fibe'},
+  'kissht':{logo:'https://logo.clearbit.com/kissht.com',pkg:'com.kissht'},
+};
+const inp=document.getElementById('appInp'),logoImg=document.getElementById('logoImg'),logoPh=document.getElementById('logoPh'),logoSpin=document.getElementById('logoSpin'),foundTag=document.getElementById('foundTag'),sgList=document.getElementById('sgList');
+let timer;
+inp.addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(()=>handleLogo(inp.value.trim()),450);});
+function handleLogo(name){
+  if(!name||name.length<2){reset();hideSg();return;}
+  const lower=name.toLowerCase();
+  for(const[k,d]of Object.entries(knownApps)){
+    if(lower.includes(k)||k.includes(lower.substring(0,4))){
+      showLogo(d.logo);showSg(lower);return;
+    }
+  }
+  logoSpin.style.display='block';logoPh.style.display='none';logoImg.style.display='none';
+  const domain=name.toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9]/g,'')+'.com';
+  const t=new Image();
+  t.onload=()=>{logoSpin.style.display='none';showLogo('https://logo.clearbit.com/'+domain);};
+  t.onerror=()=>{logoSpin.style.display='none';reset();};
+  t.src='https://logo.clearbit.com/'+domain;
+  showSg(lower);
+}
+function showLogo(src){logoImg.src=src;logoImg.style.display='block';logoPh.style.display='none';logoSpin.style.display='none';foundTag.style.display='flex';}
+function reset(){logoImg.style.display='none';logoImg.src='';logoPh.style.display='block';logoSpin.style.display='none';foundTag.style.display='none';}
+function showSg(q){
+  const m=Object.entries(knownApps).filter(([k])=>k.includes(q)||q.includes(k.slice(0,3))).slice(0,5);
+  if(!m.length){hideSg();return;}
+  sgList.innerHTML=m.map(([k,d])=>`<div class="sg-item" onclick="pickApp('${k}','${d.logo}')"><img src="${d.logo}" class="sg-icon" onerror="this.style.display='none'"><div><div class="sg-name">${k.charAt(0).toUpperCase()+k.slice(1)}</div><div class="sg-pkg">${d.pkg}</div></div></div>`).join('');
+  sgList.style.display='block';
+}
+function hideSg(){sgList.style.display='none';}
+function pickApp(name,logo){inp.value=name.charAt(0).toUpperCase()+name.slice(1);showLogo(logo);hideSg();}
+document.addEventListener('click',e=>{if(!e.target.closest('.sg-wrap'))hideSg();});
+
+// Drop zone
+const dz=document.getElementById('dropZone'),af=document.getElementById('apkFile'),fn=document.getElementById('fileName');
+af.addEventListener('change',()=>{if(af.files[0]){fn.textContent='📦 '+af.files[0].name;fn.style.display='block';dz.style.borderColor='var(--accent)';}});
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('over');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('over'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('over');const f=e.dataTransfer.files[0];if(f&&f.name.endsWith('.apk')){const dt=new DataTransfer();dt.items.add(f);af.files=dt.files;fn.textContent='📦 '+f.name;fn.style.display='block';dz.style.borderColor='var(--accent)';}});
+
+// Submit
+document.getElementById('scanForm').addEventListener('submit',()=>{
+  document.getElementById('submitIco').className='fas fa-spinner fa-spin';
+  document.getElementById('submitTxt').textContent='Analyzing...';
+  document.getElementById('submitBtn').disabled=true;
+});
+</script>
+{% endblock %}

@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% block title %}Analytics – LoanGuard AI{% endblock %}
+{% block page_title %}Analytics & Insights{% endblock %}
+{% block page_sub %}Deep insights into fraud detection trends{% endblock %}
+{% block topbar_actions %}
+<select class="topbar-sel" style="background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:7px 12px;color:var(--text);font-family:'Inter',sans-serif;font-size:11px;outline:none;">
+  <option>Last 7 Days</option><option>Last 30 Days</option><option>All Time</option>
+</select>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.an-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;}
+.an-stat{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;}
+.an-stat-ico{font-size:18px;margin-bottom:6px;}
+.an-stat-val{font-size:22px;font-weight:800;line-height:1;}
+.an-stat-lbl{font-size:10px;color:var(--text2);margin-top:2px;}
+.an-stat-delta{font-size:10px;margin-top:3px;}
+.an-charts{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;}
+.an-chart{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;}
+.an-chart-title{font-size:12px;font-weight:700;margin-bottom:14px;}
+.an-chart-wrap{height:200px;}
+.platform-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+.plat-box{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;display:flex;align-items:center;gap:12px;}
+.plat-ico{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
+.plat-ico.blue{background:rgba(79,110,247,.15);}
+.plat-ico.red{background:rgba(255,71,87,.15);}
+.plat-ico.cyan{background:rgba(0,212,170,.15);}
+.plat-ico.green{background:rgba(46,213,115,.15);}
+.plat-val{font-size:20px;font-weight:800;}
+.plat-lbl{font-size:10px;color:var(--text2);}
+.plat-delta{font-size:10px;margin-top:1px;}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- TOP STATS ROW -->
+<div class="an-stats">
+  <div class="an-stat">
+    <div class="an-stat-ico">🔵</div>
+    <div class="an-stat-val" style="color:var(--primary2)">{{ total }}</div>
+    <div class="an-stat-lbl">Total Scans</div>
+    <div class="an-stat-delta" style="color:var(--safe)">↑ 18%</div>
+  </div>
+  <div class="an-stat">
+    <div class="an-stat-ico">✅</div>
+    <div class="an-stat-val" style="color:var(--safe)">{{ safe }}</div>
+    <div class="an-stat-lbl">Safe Apps</div>
+    <div class="an-stat-delta" style="color:var(--safe)">↑ 76.4%</div>
+  </div>
+  <div class="an-stat">
+    <div class="an-stat-ico">⚠️</div>
+    <div class="an-stat-val" style="color:var(--amber)">{{ medium }}</div>
+    <div class="an-stat-lbl">Medium Risk</div>
+    <div class="an-stat-delta" style="color:var(--amber)">16.4%</div>
+  </div>
+  <div class="an-stat">
+    <div class="an-stat-ico">🚨</div>
+    <div class="an-stat-val" style="color:var(--accent2)">{{ dangerous }}</div>
+    <div class="an-stat-lbl">High-Risk Apps</div>
+    <div class="an-stat-delta" style="color:var(--accent2)">7.0%</div>
+  </div>
+  <div class="an-stat">
+    <div class="an-stat-ico">📋</div>
+    <div class="an-stat-val" style="color:var(--primary2)">{{ reports }}</div>
+    <div class="an-stat-lbl">Reports</div>
+    <div class="an-stat-delta" style="color:var(--safe)">↑ 5%</div>
+  </div>
+</div>
+
+<!-- CHARTS -->
+<div class="an-charts">
+  <div class="an-chart">
+    <div class="an-chart-title">Risk Distribution</div>
+    <div class="an-chart-wrap" style="position:relative;display:flex;align-items:center;gap:16px;">
+      <div style="width:170px;height:170px;flex-shrink:0;position:relative;">
+        <canvas id="anDonut"></canvas>
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;">
+          <div style="font-size:22px;font-weight:800;">{{ total }}</div>
+          <div style="font-size:9px;color:var(--text2);">Total</div>
+        </div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:8px;">
+        <div><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;"><span style="color:var(--safe)">● Safe</span><span>{{ safe }}</span></div><div class="prog"><div class="prog-fill prog-safe" style="width:{% if total > 0 %}{{ safe|floatformat:0 }}{% else %}0{% endif %}%"></div></div></div>
+        <div><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;"><span style="color:var(--amber)">● Medium</span><span>{{ medium }}</span></div><div class="prog"><div class="prog-fill prog-medium" style="width:{% if total > 0 %}{{ medium|floatformat:0 }}{% else %}0{% endif %}%"></div></div></div>
+        <div><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;"><span style="color:var(--accent2)">● High</span><span>{{ dangerous }}</span></div><div class="prog"><div class="prog-fill prog-danger" style="width:{% if total > 0 %}{{ dangerous|floatformat:0 }}{% else %}0{% endif %}%"></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="an-chart">
+    <div class="an-chart-title">Scans Over Time <span style="float:right;display:flex;gap:10px;font-size:10px;font-weight:400;"><span style="color:var(--safe)">● Safe</span><span style="color:var(--amber)">● Medium</span><span style="color:var(--accent2)">● High</span></span></div>
+    <div class="an-chart-wrap"><canvas id="anBar"></canvas></div>
+  </div>
+</div>
+
+<!-- PLATFORM STATS -->
+<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:20px;">
+  <div style="font-size:13px;font-weight:700;margin-bottom:16px;">Platform Statistics</div>
+  <div class="platform-grid">
+    <div class="plat-box">
+      <div class="plat-ico blue">🔍</div>
+      <div><div class="plat-val" style="color:var(--primary2)">{{ total }}</div><div class="plat-lbl">Total Apps Scanned</div></div>
+    </div>
+    <div class="plat-box">
+      <div class="plat-ico red">⚠️</div>
+      <div><div class="plat-val" style="color:var(--accent2)">{{ dangerous }}</div><div class="plat-lbl">High Risk Apps Found</div><div class="plat-delta" style="color:var(--accent2)">↑ 18%</div></div>
+    </div>
+    <div class="plat-box">
+      <div class="plat-ico cyan">🚩</div>
+      <div><div class="plat-val">{{ reports }}</div><div class="plat-lbl">Community Reports</div></div>
+    </div>
+    <div class="plat-box">
+      <div class="plat-ico green">🛡️</div>
+      <div><div class="plat-val" style="color:var(--safe)">0.0%</div><div class="plat-lbl">Fraud Probability</div></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const days=[];for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days.push(d.toLocaleDateString('en',{weekday:'short'}));}
+new Chart(document.getElementById('anDonut').getContext('2d'),{type:'doughnut',data:{labels:['Safe','Medium','High'],datasets:[{data:[{{safe}},{{medium}},{{dangerous}}],backgroundColor:['rgba(46,213,115,.8)','rgba(255,165,2,.8)','rgba(255,71,87,.8)'],borderWidth:0}]},options:{cutout:'70%',maintainAspectRatio:false,plugins:{legend:{display:false}}}});
+new Chart(document.getElementById('anBar').getContext('2d'),{type:'bar',data:{labels:days,datasets:[{label:'Safe',data:[0,0,0,0,0,0,{{safe}}],backgroundColor:'rgba(46,213,115,.7)',borderRadius:4,borderSkipped:false},{label:'Medium',data:[0,0,0,0,0,0,{{medium}}],backgroundColor:'rgba(255,165,2,.7)',borderRadius:4,borderSkipped:false},{label:'High',data:[0,0,0,0,0,0,{{dangerous}}],backgroundColor:'rgba(255,71,87,.7)',borderRadius:4,borderSkipped:false}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{stacked:true,grid:{color:'rgba(99,108,255,.06)'},ticks:{color:'var(--text2)',font:{size:10}}},y:{stacked:true,grid:{color:'rgba(99,108,255,.06)'},ticks:{color:'var(--text2)',font:{size:10}},beginAtZero:true}}}});
+</script>
+{% endblock %}

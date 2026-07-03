@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% block title %}Scan History – LoanGuard AI{% endblock %}
+{% block page_title %}Scan History{% endblock %}
+{% block page_sub %}View all previously scanned applications{% endblock %}
+{% block topbar_actions %}<a href="/apk/upload/" class="btn btn-primary btn-sm"><i class="fas fa-search"></i> New Scan</a>{% endblock %}
+
+{% block extra_css %}
+<style>
+.hist-toolbar{
+  padding:14px 18px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;
+}
+.search-wrap{position:relative;flex:1;max-width:280px;}
+.search-wrap i{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text2);font-size:12px;}
+.search-inp{
+  width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;
+  padding:8px 12px 8px 32px;color:var(--text);font-family:'Inter',sans-serif;font-size:12px;outline:none;
+}
+.search-inp:focus{border-color:var(--primary);}
+.risk-sel{
+  background:var(--bg3);border:1px solid var(--border);border-radius:8px;
+  padding:8px 12px;color:var(--text);font-family:'Inter',sans-serif;font-size:12px;outline:none;
+}
+.app-cell{display:flex;align-items:center;gap:9px;}
+.app-ico-sm{width:26px;height:26px;border-radius:6px;background:linear-gradient(135deg,var(--primary),var(--accent));display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  {% if apps %}
+  <div class="hist-toolbar">
+    <div class="search-wrap">
+      <i class="fas fa-search"></i>
+      <input type="text" id="srch" class="search-inp" placeholder="Search apps...">
+    </div>
+    <select id="riskFil" class="risk-sel">
+      <option value="">All Risk Levels</option>
+      <option value="safe">Safe</option>
+      <option value="medium">Medium Risk</option>
+      <option value="dangerous">Dangerous</option>
+    </select>
+  </div>
+  <table class="tbl" id="histTbl">
+    <thead>
+      <tr>
+        <th>App Name</th><th>Package Name</th><th>Risk Level</th><th>Score</th><th>Permissions</th><th>Scanned At</th><th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for app in apps %}
+      <tr data-risk="{{ app.risk_level }}" data-name="{{ app.app_name|lower }}">
+        <td>
+          <div class="app-cell">
+            <div class="app-ico-sm">📱</div>
+            <div>
+              <div style="font-size:12px;font-weight:600;">{{ app.app_name }}</div>
+              {% if app.is_blacklisted %}<div style="font-size:10px;color:var(--accent2);"><i class="fas fa-ban"></i> Blacklisted</div>{% endif %}
+            </div>
+          </div>
+        </td>
+        <td style="font-size:11px;color:var(--text2)">{{ app.package_name|truncatechars:26 }}</td>
+        <td>
+          {% if app.risk_level == 'safe' %}<span class="badge badge-safe">✅ Safe</span>
+          {% elif app.risk_level == 'medium' %}<span class="badge badge-medium">⚠️ Medium</span>
+          {% else %}<span class="badge badge-dangerous">🚨 High</span>{% endif %}
+        </td>
+        <td>
+          <div style="display:flex;align-items:center;gap:7px;">
+            <div class="prog" style="width:60px"><div class="prog-fill {% if app.risk_level == 'safe' %}prog-safe{% elif app.risk_level == 'medium' %}prog-medium{% else %}prog-danger{% endif %}" style="width:{{ app.fraud_probability|floatformat:0 }}%"></div></div>
+            <span style="font-size:11px;font-weight:600;">{{ app.fraud_probability|floatformat:1 }}%</span>
+          </div>
+        </td>
+        <td style="font-size:11px">{{ app.dangerous_permissions_count }} <span style="color:var(--accent2)">high</span> / {{ app.total_permissions }}</td>
+        <td style="font-size:11px;color:var(--text2)">{{ app.scanned_at|date:"M d, Y H:i" }}</td>
+        <td><a href="/apk/result/{{ app.pk }}/" class="btn btn-outline btn-sm">View</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div style="padding:70px;text-align:center;">
+    <div style="font-size:40px;margin-bottom:14px;opacity:.3">📋</div>
+    <div style="font-size:15px;font-weight:700;margin-bottom:6px;">No scans yet</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:18px;">Start by scanning your first loan app.</div>
+    <a href="/apk/upload/" class="btn btn-primary"><i class="fas fa-search"></i> Scan First App</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const srch=document.getElementById('srch'),fil=document.getElementById('riskFil');
+function filter(){
+  const q=srch?srch.value.toLowerCase():'',risk=fil?fil.value:'';
+  document.querySelectorAll('#histTbl tbody tr').forEach(r=>{
+    const n=r.dataset.name||'',rv=r.dataset.risk||'';
+    r.style.display=(!q||n.includes(q))&&(!risk||rv===risk)?'':'none';
+  });
+}
+if(srch)srch.addEventListener('input',filter);
+if(fil)fil.addEventListener('change',filter);
+</script>
+{% endblock %}

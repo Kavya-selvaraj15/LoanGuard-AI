@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% block title %}Review Analyzer{% endblock %}
+{% block page_title %}NLP Review Analyzer{% endblock %}
+
+{% block content %}
+<div style="max-width:720px;margin:0 auto;">
+    <div class="card" style="margin-bottom:24px;">
+        <div class="card-header">
+            <i class="fas fa-brain" style="color:var(--accent)"></i>
+            Analyze Reviews for Scam Detection
+        </div>
+        <div class="card-body">
+            <p style="color:var(--text-muted);font-size:0.875rem;margin-bottom:20px;">
+                Paste user reviews from Google Play or any app store. Our NLP engine detects scam keywords, harassment language, and sentiment.
+            </p>
+            <div class="form-group">
+                <label class="form-label">User Reviews (one per line)</label>
+                <textarea id="reviewInput" class="form-input" rows="8" style="padding:12px 14px;resize:vertical;"
+                    placeholder="Paste reviews here, one per line...&#10;&#10;Examples:&#10;This app stole my contacts and sent threatening messages!&#10;Beware! They harass you with your own photos.&#10;Quick loan approved in 5 minutes. Great service!&#10;Fraud app! They shared my private data with recovery agents."></textarea>
+            </div>
+            <button onclick="analyzeReviews()" class="btn btn-primary" style="padding:12px 28px;">
+                <i class="fas fa-search"></i> Analyze Reviews
+            </button>
+        </div>
+    </div>
+
+    <div id="resultsSection" style="display:none;">
+        <div class="stat-grid" style="margin-bottom:24px;">
+            <div class="stat-card green">
+                <div class="stat-label">Positive</div>
+                <div class="stat-value green" id="posCount">0</div>
+            </div>
+            <div class="stat-card red">
+                <div class="stat-label">Negative</div>
+                <div class="stat-value red" id="negCount">0</div>
+            </div>
+            <div class="stat-card amber">
+                <div class="stat-label">Scam Reviews</div>
+                <div class="stat-value amber" id="scamCount">0</div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header"><i class="fas fa-list" style="color:var(--accent)"></i> Analysis Results</div>
+            <div id="resultsList" style="padding:0;"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const SCAM_KEYWORDS = [
+    'fraud','scam','fake','harass','blackmail','threat','stolen','contacts',
+    'leaked','illegal','trap','abuse','beware','avoid','dangerous','extort',
+    'shame','humiliate','recovery agent','personal data','misuse'
+];
+
+function analyzeReviews() {
+    const text = document.getElementById('reviewInput').value.trim();
+    if (!text) return alert('Please enter at least one review.');
+    const reviews = text.split('\n').filter(r => r.trim());
+    let pos = 0, neg = 0, scam = 0;
+    let html = '';
+
+    reviews.forEach(review => {
+        const lower = review.toLowerCase();
+        const foundKw = SCAM_KEYWORDS.filter(kw => lower.includes(kw));
+        const isScam = foundKw.length > 0;
+        // Simple sentiment
+        const posWords = ['good','great','excellent','nice','helpful','fast','genuine','trustworthy','recommend','safe','quick','easy'];
+        const negWords = ['bad','terrible','awful','horrible','worst','fraud','fake','scam','harass','dangerous','stolen','abuse','threat'];
+        const posScore = posWords.filter(w => lower.includes(w)).length;
+        const negScore = negWords.filter(w => lower.includes(w)).length;
+        let sentiment = 'neutral';
+        if (posScore > negScore) sentiment = 'positive';
+        if (negScore > posScore || isScam) sentiment = 'negative';
+
+        if (sentiment === 'positive') pos++;
+        else if (sentiment === 'negative') neg++;
+        if (isScam) scam++;
+
+        const colors = { positive: 'var(--accent3)', negative: 'var(--accent2)', neutral: 'var(--text-muted)' };
+        const icons = { positive: 'thumbs-up', negative: 'thumbs-down', neutral: 'minus' };
+        const bgColors = { positive: 'rgba(46,213,115,0.1)', negative: 'rgba(255,71,87,0.1)', neutral: 'rgba(122,139,160,0.1)' };
+
+        html += `
+        <div style="padding:16px 24px;border-bottom:1px solid var(--border);display:flex;gap:14px;align-items:flex-start;">
+            <div style="width:36px;height:36px;border-radius:50%;background:${bgColors[sentiment]};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="fas fa-${icons[sentiment]}" style="color:${colors[sentiment]};font-size:0.85rem;"></i>
+            </div>
+            <div style="flex:1;">
+                <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;align-items:center;">
+                    <span style="background:${bgColors[sentiment]};color:${colors[sentiment]};padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:600;text-transform:uppercase;">${sentiment}</span>
+                    ${isScam ? `<span style="background:rgba(255,71,87,0.15);color:var(--accent2);padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:600;"><i class="fas fa-exclamation-triangle"></i> SCAM KEYWORDS</span>` : ''}
+                </div>
+                <p style="font-size:0.875rem;margin-bottom:${foundKw.length ? '10px' : '0'};">${review}</p>
+                ${foundKw.length ? `<div style="display:flex;gap:6px;flex-wrap:wrap;">${foundKw.map(kw => `<span style="background:rgba(255,71,87,0.15);color:var(--accent2);padding:2px 8px;border-radius:4px;font-size:0.72rem;">${kw}</span>`).join('')}</div>` : ''}
+            </div>
+        </div>`;
+    });
+
+    document.getElementById('posCount').textContent = pos;
+    document.getElementById('negCount').textContent = neg;
+    document.getElementById('scamCount').textContent = scam;
+    document.getElementById('resultsList').innerHTML = html;
+    document.getElementById('resultsSection').style.display = 'block';
+    document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+}
+</script>
+{% endblock %}

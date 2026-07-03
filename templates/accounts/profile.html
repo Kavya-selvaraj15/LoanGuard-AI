@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block title %}My Profile{% endblock %}
+{% block page_title %}My Profile{% endblock %}
+
+{% block content %}
+<div style="max-width:640px;margin:0 auto;">
+    <div class="card" style="margin-bottom:24px;">
+        <div class="card-body" style="display:flex;align-items:center;gap:24px;padding:32px;">
+            <div style="width:80px;height:80px;background:linear-gradient(135deg,var(--accent),#0099cc);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;color:#000;flex-shrink:0;">
+                {{ user.username|slice:":1"|upper }}
+            </div>
+            <div>
+                <h2 style="font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;margin-bottom:4px;">{{ user.username }}</h2>
+                <p style="color:var(--text-muted);font-size:0.875rem;margin-bottom:8px;">{{ user.email }}</p>
+                <span class="badge {% if user.is_staff %}badge-dangerous{% else %}badge-safe{% endif %}">
+                    {% if user.is_staff %}Admin{% else %}Regular User{% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header"><i class="fas fa-info-circle" style="color:var(--accent)"></i> Account Details</div>
+        <div class="card-body">
+            <div style="display:grid;gap:16px;">
+                {% for label, value in profile_data %}
+                <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);">
+                    <span style="color:var(--text-muted);font-size:0.875rem;">{{ label }}</span>
+                    <span style="font-size:0.875rem;font-weight:500;">{{ value }}</span>
+                </div>
+                {% endfor %}
+                <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);">
+                    <span style="color:var(--text-muted);font-size:0.875rem;">Username</span>
+                    <span style="font-size:0.875rem;font-weight:500;">{{ user.username }}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);">
+                    <span style="color:var(--text-muted);font-size:0.875rem;">Email</span>
+                    <span style="font-size:0.875rem;font-weight:500;">{{ user.email }}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;padding:12px 0;">
+                    <span style="color:var(--text-muted);font-size:0.875rem;">Member Since</span>
+                    <span style="font-size:0.875rem;font-weight:500;">{{ user.date_joined|date:"F d, Y" }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

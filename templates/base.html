@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}LoanGuard AI{% endblock %}</title>
+  {% load static %}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg:#07071a; --bg2:#0d0d2b; --bg3:#11113a;
+      --card:#13133a; --card2:#181848;
+      --border:rgba(99,108,255,0.18);
+      --primary:#4f6ef7; --primary2:#6c7fff;
+      --accent:#00d4aa; --accent2:#ff4757; --amber:#ffa502; --safe:#2ed573;
+      --text:#e8eaff; --text2:#7b82b5;
+      --sidebar:220px;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;}
+
+    /* ── SIDEBAR ── */
+    .sidebar{
+      width:var(--sidebar);position:fixed;top:0;left:0;height:100vh;
+      background:var(--bg2);border-right:1px solid var(--border);
+      display:flex;flex-direction:column;z-index:100;
+    }
+    .sb-logo{
+      padding:18px 16px 14px;border-bottom:1px solid var(--border);
+      display:flex;align-items:center;gap:9px;text-decoration:none;
+    }
+    .sb-logo-icon{
+      width:32px;height:32px;border-radius:8px;flex-shrink:0;
+      background:linear-gradient(135deg,var(--primary),var(--accent));
+      display:flex;align-items:center;justify-content:center;font-size:16px;
+    }
+    .sb-logo-text{font-size:14px;font-weight:700;color:var(--text);}
+    .sb-logo-sub{font-size:9px;color:var(--text2);letter-spacing:.1em;text-transform:uppercase;}
+
+    .sb-nav{flex:1;padding:10px 0;overflow-y:auto;}
+    .sb-section{padding:10px 14px 4px;font-size:9px;font-weight:700;color:var(--text2);letter-spacing:.12em;text-transform:uppercase;}
+    .sb-item a{
+      display:flex;align-items:center;gap:10px;
+      padding:8px 14px;font-size:12px;font-weight:500;color:var(--text2);
+      text-decoration:none;border-left:3px solid transparent;transition:all .15s;
+    }
+    .sb-item a:hover,.sb-item a.active{
+      color:var(--text);background:rgba(79,110,247,.12);border-left-color:var(--primary);
+    }
+    .sb-item a i{width:16px;text-align:center;font-size:13px;}
+
+    .sb-user{
+      padding:12px 14px;border-top:1px solid var(--border);
+      display:flex;align-items:center;gap:10px;
+    }
+    .sb-avatar{
+      width:32px;height:32px;border-radius:50%;flex-shrink:0;
+      background:linear-gradient(135deg,var(--primary),var(--accent));
+      display:flex;align-items:center;justify-content:center;
+      font-weight:700;font-size:13px;color:#fff;
+    }
+    .sb-uname{font-size:12px;font-weight:600;}
+    .sb-urole{font-size:10px;color:var(--accent);}
+    .sb-logout{
+      margin-left:auto;width:28px;height:28px;border-radius:7px;
+      background:rgba(255,71,87,.1);color:var(--accent2);
+      display:flex;align-items:center;justify-content:center;
+      text-decoration:none;font-size:12px;flex-shrink:0;
+      transition:background .2s;
+    }
+    .sb-logout:hover{background:rgba(255,71,87,.2);}
+
+    /* ── MAIN ── */
+    .main{margin-left:var(--sidebar);flex:1;display:flex;flex-direction:column;min-height:100vh;}
+
+    .topbar{
+      padding:12px 24px;border-bottom:1px solid var(--border);
+      background:var(--bg2);position:sticky;top:0;z-index:50;
+      display:flex;align-items:center;justify-content:space-between;
+    }
+    .topbar-left{display:flex;align-items:center;gap:12px;}
+    .topbar-title{font-size:17px;font-weight:700;}
+    .topbar-sub{font-size:11px;color:var(--text2);}
+    .topbar-right{display:flex;align-items:center;gap:10px;}
+    .topbar-user{
+      display:flex;align-items:center;gap:8px;
+      padding:5px 10px;border-radius:8px;
+      background:var(--bg3);border:1px solid var(--border);
+    }
+    .topbar-avatar{
+      width:26px;height:26px;border-radius:50%;
+      background:linear-gradient(135deg,var(--primary),var(--accent));
+      display:flex;align-items:center;justify-content:center;
+      font-size:11px;font-weight:700;color:#fff;
+    }
+    .topbar-uinfo{line-height:1.2;}
+    .topbar-uname{font-size:11px;font-weight:600;}
+    .topbar-urole{font-size:9px;color:var(--text2);}
+
+    .page-body{padding:22px 24px;flex:1;}
+
+    /* ── BUTTONS ── */
+    .btn{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;
+      cursor:pointer;border:none;text-decoration:none;transition:all .2s;font-family:'Inter',sans-serif;
+    }
+    .btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;}
+    .btn-primary:hover{opacity:.9;transform:translateY(-1px);box-shadow:0 4px 16px rgba(79,110,247,.4);}
+    .btn-outline{background:transparent;color:var(--text);border:1px solid var(--border);}
+    .btn-outline:hover{border-color:var(--primary);color:var(--primary2);}
+    .btn-danger{background:rgba(255,71,87,.15);color:var(--accent2);border:1px solid rgba(255,71,87,.3);}
+    .btn-danger:hover{background:rgba(255,71,87,.25);}
+    .btn-sm{padding:5px 11px;font-size:11px;}
+
+    /* ── CARDS ── */
+    .card{background:var(--card);border:1px solid var(--border);border-radius:12px;}
+    .card-p{padding:20px;}
+
+    /* ── BADGES ── */
+    .badge{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;}
+    .badge-safe{background:rgba(46,213,115,.12);color:var(--safe);border:1px solid rgba(46,213,115,.25);}
+    .badge-medium{background:rgba(255,165,2,.12);color:var(--amber);border:1px solid rgba(255,165,2,.25);}
+    .badge-dangerous{background:rgba(255,71,87,.12);color:var(--accent2);border:1px solid rgba(255,71,87,.25);}
+    .badge-review{background:rgba(79,110,247,.12);color:var(--primary2);border:1px solid rgba(79,110,247,.25);}
+    .badge-confirmed{background:rgba(255,71,87,.12);color:var(--accent2);border:1px solid rgba(255,71,87,.25);}
+    .badge-dismissed{background:rgba(123,130,181,.12);color:var(--text2);border:1px solid rgba(123,130,181,.25);}
+
+    /* ── TABLE ── */
+    .tbl{width:100%;border-collapse:collapse;}
+    .tbl thead th{
+      padding:9px 14px;text-align:left;font-size:10px;font-weight:700;
+      color:var(--text2);letter-spacing:.08em;text-transform:uppercase;
+      border-bottom:1px solid var(--border);
+    }
+    .tbl tbody td{
+      padding:11px 14px;font-size:12px;
+      border-bottom:1px solid rgba(99,108,255,.07);vertical-align:middle;
+    }
+    .tbl tbody tr:hover{background:rgba(79,110,247,.04);}
+    .tbl tbody tr:last-child td{border-bottom:none;}
+
+    /* ── PROGRESS ── */
+    .prog{height:5px;border-radius:3px;background:var(--bg3);overflow:hidden;}
+    .prog-fill{height:100%;border-radius:3px;transition:width .6s ease;}
+    .prog-safe{background:var(--safe);}
+    .prog-medium{background:var(--amber);}
+    .prog-danger{background:var(--accent2);}
+
+    /* ── FORM INPUTS ── */
+    .form-input{
+      width:100%;background:var(--bg3);border:1px solid var(--border);
+      border-radius:8px;padding:10px 14px;color:var(--text);
+      font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:border-color .2s;
+    }
+    .form-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(79,110,247,.12);}
+    .form-label{
+      display:block;font-size:10px;font-weight:700;color:var(--text2);
+      letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;
+    }
+    .form-group{margin-bottom:16px;}
+
+    /* ── MESSAGES ── */
+    .msgs{margin-bottom:16px;}
+    .msg{
+      padding:10px 14px;border-radius:8px;font-size:12px;font-weight:500;
+      margin-bottom:8px;display:flex;align-items:center;gap:8px;
+    }
+    .msg.success{background:rgba(46,213,115,.1);border:1px solid rgba(46,213,115,.3);color:var(--safe);}
+    .msg.error{background:rgba(255,71,87,.1);border:1px solid rgba(255,71,87,.3);color:var(--accent2);}
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar{width:5px;}
+    ::-webkit-scrollbar-track{background:var(--bg2);}
+    ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+    {% block extra_css %}{% endblock %}
+  </style>
+</head>
+<body>
+<nav class="sidebar">
+  <a href="/dashboard/" class="sb-logo">
+    <div class="sb-logo-icon">🛡️</div>
+    <div><div class="sb-logo-text">LoanGuard AI</div><div class="sb-logo-sub">Fraud Detection</div></div>
+  </a>
+  <div class="sb-nav">
+    <div class="sb-section">Main</div>
+    <div class="sb-item"><a href="/dashboard/" {% if 'dashboard' in request.path %}class="active"{% endif %}><i class="fas fa-th-large"></i>Dashboard</a></div>
+    <div class="sb-item"><a href="/apk/upload/" {% if 'upload' in request.path %}class="active"{% endif %}><i class="fas fa-search"></i>Scan APK</a></div>
+    <div class="sb-item"><a href="/apk/history/" {% if 'history' in request.path %}class="active"{% endif %}><i class="fas fa-clock"></i>Scan History</a></div>
+    <div class="sb-section">Community</div>
+    <div class="sb-item"><a href="/community/reports/" {% if 'reports' in request.path %}class="active"{% endif %}><i class="fas fa-flag" style="color:var(--accent2)"></i>Scam Reports</a></div>
+    <div class="sb-item"><a href="/community/submit/" {% if 'submit' in request.path %}class="active"{% endif %}><i class="fas fa-plus-circle"></i>Submit Report</a></div>
+    <div class="sb-section">Insights</div>
+    <div class="sb-item"><a href="/analytics/" {% if 'analytics' in request.path %}class="active"{% endif %}><i class="fas fa-chart-line"></i>Analytics</a></div>
+    {% if user.is_staff %}
+    <div class="sb-section">Admin</div>
+    <div class="sb-item"><a href="/admin/" {% if 'admin' in request.path %}class="active"{% endif %}><i class="fas fa-shield-alt" style="color:var(--primary2)"></i>Admin Panel</a></div>
+    {% endif %}
+  </div>
+  <div class="sb-user">
+    <div class="sb-avatar">{{ user.username|first|upper }}</div>
+    <div><div class="sb-uname">{{ user.username }}</div><div class="sb-urole">{% if user.is_staff %}Admin{% else %}User{% endif %}</div></div>
+    <a href="/accounts/logout/" class="sb-logout" title="Logout"><i class="fas fa-power-off"></i></a>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div>
+        <div class="topbar-title">{% block page_title %}{% endblock %}</div>
+        <div class="topbar-sub">{% block page_sub %}{% endblock %}</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      {% block topbar_actions %}<a href="/apk/upload/" class="btn btn-primary"><i class="fas fa-search"></i> New Scan</a>{% endblock %}
+      <div class="topbar-user">
+        <div class="topbar-avatar">{{ user.username|first|upper }}</div>
+        <div class="topbar-uinfo">
+          <div class="topbar-uname">{{ user.username }}</div>
+          <div class="topbar-urole">{% if user.is_staff %}Admin ▾{% else %}User ▾{% endif %}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-body">
+    {% if messages %}
+    <div class="msgs">
+      {% for m in messages %}
+      <div class="msg {{ m.tags }}">
+        {% if m.tags == 'success' %}<i class="fas fa-check-circle"></i>{% else %}<i class="fas fa-exclamation-circle"></i>{% endif %}
+        {{ m }}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </div>
+</div>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

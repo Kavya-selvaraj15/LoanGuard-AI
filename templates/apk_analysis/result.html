@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+{% block title %}Result – {{ app.app_name }}{% endblock %}
+{% block page_title %}Scan Result: {{ app.app_name }}{% endblock %}
+{% block page_sub %}Analysis completed on {{ app.scanned_at|date:"M d, Y H:i" }}{% endblock %}
+{% block topbar_actions %}<a href="#" onclick="window.print()" class="btn btn-outline btn-sm"><i class="fas fa-download"></i> Download Report</a>{% endblock %}
+
+{% block extra_css %}
+<style>
+.result-top{display:grid;grid-template-columns:auto 1fr auto auto;gap:20px;align-items:center;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:22px 24px;margin-bottom:18px;}
+.fraud-score-big{text-align:center;}
+.fraud-num{font-size:44px;font-weight:800;line-height:1;}
+.fraud-lbl{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;margin-top:2px;}
+.risk-badge-big{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;font-size:13px;font-weight:700;}
+.risk-badge-big.dangerous{background:rgba(255,71,87,.15);color:var(--accent2);border:1px solid rgba(255,71,87,.3);}
+.risk-badge-big.medium{background:rgba(255,165,2,.15);color:var(--amber);border:1px solid rgba(255,165,2,.3);}
+.risk-badge-big.safe{background:rgba(46,213,115,.15);color:var(--safe);border:1px solid rgba(46,213,115,.3);}
+.result-meta{font-size:11px;color:var(--text2);}
+.stat-mini{text-align:center;background:var(--bg3);border-radius:9px;padding:14px 20px;}
+.stat-mini-val{font-size:22px;font-weight:800;}
+.stat-mini-lbl{font-size:10px;color:var(--text2);margin-top:2px;}
+.result-body{display:grid;grid-template-columns:2fr 1fr;gap:18px;margin-bottom:18px;}
+.perm-scroll{max-height:380px;overflow-y:auto;}
+.perm-row{padding:10px 16px;border-bottom:1px solid rgba(99,108,255,.07);display:flex;align-items:center;gap:12px;}
+.perm-row:last-child{border-bottom:none;}
+.perm-name{font-size:11px;font-family:monospace;flex:1;}
+.perm-desc{font-size:10px;color:var(--text2);}
+.side-cards{display:flex;flex-direction:column;gap:14px;}
+.side-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;}
+.side-title{font-size:12px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:7px;}
+.meter-wrap{position:relative;height:120px;display:flex;align-items:center;justify-content:center;}
+.warning-box{
+  background:rgba(255,71,87,.07);border:1px solid rgba(255,71,87,.2);border-radius:9px;
+  padding:12px 16px;margin-top:14px;font-size:11px;color:var(--accent2);
+  display:flex;align-items:flex-start;gap:8px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- TOP RESULT BANNER -->
+<div class="result-top">
+  <div class="fraud-score-big">
+    <div class="fraud-num" style="color:{% if app.risk_level == 'dangerous' %}var(--accent2){% elif app.risk_level == 'medium' %}var(--amber){% else %}var(--safe){% endif %}">
+      {{ app.fraud_probability|floatformat:0 }}%
+    </div>
+    <div class="fraud-lbl">Fraud Score</div>
+  </div>
+
+  <div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+      <div class="risk-badge-big {{ app.risk_level }}">
+        <i class="fas fa-{% if app.risk_level == 'dangerous' %}exclamation-triangle{% elif app.risk_level == 'medium' %}exclamation{% else %}check{% endif %}"></i>
+        {% if app.risk_level == 'dangerous' %}High Risk{% elif app.risk_level == 'medium' %}Medium Risk{% else %}Safe{% endif %}
+      </div>
+    </div>
+    <div class="result-meta" style="margin-bottom:8px;">{{ app.package_name }}</div>
+    <div style="background:var(--bg3);border-radius:7px;padding:10px 14px;border-left:3px solid {% if app.risk_level == 'dangerous' %}var(--accent2){% elif app.risk_level == 'medium' %}var(--amber){% else %}var(--safe){% endif %};font-size:11px;line-height:1.6;">
+      {% if app.risk_level == 'dangerous' %}<strong style="color:var(--accent2)">⚠ HIGH RISK:</strong> This app has multiple high-risk permissions that can lead to data privacy violations. <strong>We recommend not installing this app.</strong>
+      {% elif app.risk_level == 'medium' %}<strong style="color:var(--amber)">⚠ MODERATE RISK:</strong> This app has some suspicious permissions. Install only if you fully trust the source.
+      {% else %}<strong style="color:var(--safe)">✅ LOW RISK:</strong> This app appears relatively safe. No major dangerous permissions detected.{% endif %}
+    </div>
+  </div>
+
+  <div class="stat-mini">
+    <div class="stat-mini-val">{{ app.total_permissions }}</div>
+    <div class="stat-mini-lbl">Total Permissions</div>
+  </div>
+  <div class="stat-mini">
+    <div class="stat-mini-val" style="color:var(--accent2)">{{ app.dangerous_permissions_count }}</div>
+    <div class="stat-mini-lbl">High-Risk Perms</div>
+  </div>
+</div>
+
+<!-- BODY: Permissions + Side -->
+<div class="result-body">
+
+  <!-- Permissions Analysis -->
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;">
+    <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-size:13px;font-weight:700;display:flex;align-items:center;gap:7px;"><i class="fas fa-key" style="color:var(--primary2)"></i> Permissions Analysis</div>
+      <span class="badge badge-review">{{ app.total_permissions }} found</span>
+    </div>
+    <div class="perm-scroll">
+      {% for perm in permissions %}
+      <div class="perm-row">
+        <code class="perm-name" style="color:{% if perm.risk_level == 'high' %}var(--accent2){% elif perm.risk_level == 'medium' %}var(--amber){% else %}var(--safe){% endif %}">{{ perm.permission_name }}</code>
+        <span class="badge {% if perm.risk_level == 'high' %}badge-dangerous{% elif perm.risk_level == 'medium' %}badge-medium{% else %}badge-safe{% endif %}">{{ perm.risk_level|upper }}</span>
+        <div class="perm-desc">{{ perm.description|truncatechars:50 }}</div>
+        <i class="fas fa-chevron-right" style="color:var(--text2);font-size:10px"></i>
+      </div>
+      {% empty %}
+      <div style="padding:40px;text-align:center;color:var(--text2);font-size:12px;">No permissions extracted</div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Side cards -->
+  <div class="side-cards">
+    <!-- Risk Breakdown Donut -->
+    <div class="side-card">
+      <div class="side-title"><i class="fas fa-chart-pie" style="color:var(--primary2)"></i> Risk Breakdown</div>
+      <div style="height:160px;display:flex;align-items:center;justify-content:center;">
+        <canvas id="permChart"></canvas>
+      </div>
+    </div>
+    <!-- Fraud Meter -->
+    <div class="side-card">
+      <div class="side-title"><i class="fas fa-tachometer-alt" style="color:var(--primary2)"></i> Fraud Meter</div>
+      <div style="margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:5px;">
+          <span>Fraud Probability</span>
+          <span style="color:{% if app.fraud_probability >= 65 %}var(--accent2){% elif app.fraud_probability >= 35 %}var(--amber){% else %}var(--safe){% endif %};font-weight:700;">{{ app.fraud_probability|floatformat:1 }}%</span>
+        </div>
+        <div class="prog" style="height:8px"><div class="prog-fill {% if app.fraud_probability >= 65 %}prog-danger{% elif app.fraud_probability >= 35 %}prog-medium{% else %}prog-safe{% endif %}" style="width:{{ app.fraud_probability }}%"></div></div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:5px;">
+          <span>Overall Risk Score</span>
+          <span style="color:var(--primary2);font-weight:700;">{{ app.risk_score|floatformat:1 }}/100</span>
+        </div>
+        <div class="prog" style="height:8px"><div class="prog-fill" style="width:{{ app.risk_score }}%;background:var(--primary)"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- REVIEWS -->
+{% if reviews %}
+<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;margin-bottom:18px;">
+  <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+    <div style="font-size:13px;font-weight:700;"><i class="fas fa-comments" style="color:var(--primary2)"></i> NLP Review Analysis</div>
+    <span class="badge badge-review">{{ reviews|length }} reviews</span>
+  </div>
+  {% for review in reviews %}
+  <div style="padding:13px 18px;border-bottom:1px solid rgba(99,108,255,.07);display:flex;gap:12px;align-items:flex-start;">
+    <div style="width:34px;height:34px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:{% if review.sentiment == 'negative' %}rgba(255,71,87,.15){% elif review.sentiment == 'positive' %}rgba(46,213,115,.15){% else %}rgba(123,130,181,.15){% endif %}">
+      <i class="fas fa-{% if review.sentiment == 'negative' %}thumbs-down{% elif review.sentiment == 'positive' %}thumbs-up{% else %}minus{% endif %}" style="color:{% if review.sentiment == 'negative' %}var(--accent2){% elif review.sentiment == 'positive' %}var(--safe){% else %}var(--text2){% endif %};font-size:13px;"></i>
+    </div>
+    <div style="flex:1;">
+      <div style="display:flex;gap:7px;margin-bottom:6px;flex-wrap:wrap;">
+        <span class="badge {% if review.sentiment == 'negative' %}badge-dangerous{% elif review.sentiment == 'positive' %}badge-safe{% else %}badge-medium{% endif %}">{{ review.sentiment|upper }}</span>
+        {% if review.is_scam_review %}<span class="badge badge-dangerous"><i class="fas fa-exclamation-triangle"></i> SCAM</span>{% endif %}
+      </div>
+      <div style="font-size:12px;line-height:1.6;">{{ review.review_text }}</div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- ACTIONS -->
+<div style="display:flex;gap:10px;">
+  <a href="/apk/upload/" class="btn btn-primary"><i class="fas fa-search"></i> Scan Another App</a>
+  <a href="/apk/history/" class="btn btn-outline"><i class="fas fa-clock"></i> View History</a>
+  <a href="/community/submit/" class="btn btn-danger" style="margin-left:auto;"><i class="fas fa-flag"></i> Report This App</a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const pCtx=document.getElementById('permChart').getContext('2d');
+new Chart(pCtx,{type:'doughnut',data:{labels:['High Risk','Medium Risk','Low Risk'],datasets:[{data:[{{high_perms.count}},{{medium_perms.count}},{{low_perms.count}}],backgroundColor:['rgba(255,71,87,.8)','rgba(255,165,2,.8)','rgba(46,213,115,.8)'],borderWidth:0,hoverOffset:4}]},options:{cutout:'62%',maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#7b82b5',font:{size:10},boxWidth:10,padding:8}}}}});
+</script>
+{% endblock %}

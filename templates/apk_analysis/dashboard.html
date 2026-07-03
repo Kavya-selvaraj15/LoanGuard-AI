@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Dashboard – LoanGuard AI{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_sub %}Overview of fraud detection system{% endblock %}
+
+{% block extra_css %}
+<style>
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px;}
+.stat-box{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;
+  display:flex;align-items:center;gap:14px;
+}
+.stat-ico{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.stat-ico.blue{background:rgba(79,110,247,.15);}
+.stat-ico.green{background:rgba(46,213,115,.15);}
+.stat-ico.amber{background:rgba(255,165,2,.15);}
+.stat-ico.red{background:rgba(255,71,87,.15);}
+.stat-val{font-size:26px;font-weight:800;line-height:1;}
+.stat-lbl{font-size:11px;color:var(--text2);margin-top:2px;}
+.stat-delta{font-size:10px;margin-top:3px;}
+.delta-up{color:var(--safe);}
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:22px;}
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;}
+.chart-title{font-size:13px;font-weight:700;margin-bottom:14px;}
+.chart-wrap{height:200px;position:relative;}
+.recent-card{background:var(--card);border:1px solid var(--border);border-radius:12px;}
+.recent-head{
+  padding:16px 20px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.recent-title{font-size:13px;font-weight:700;}
+.app-cell{display:flex;align-items:center;gap:10px;}
+.app-ico{width:28px;height:28px;border-radius:7px;background:linear-gradient(135deg,var(--primary),var(--accent));display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.app-name{font-size:12px;font-weight:600;}
+.app-pkg{font-size:10px;color:var(--text2);}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- STAT CARDS -->
+<div class="stats-row">
+  <div class="stat-box">
+    <div class="stat-ico blue">🔍</div>
+    <div>
+      <div class="stat-val">{{ total }}</div>
+      <div class="stat-lbl">Total Scans</div>
+      <div class="stat-delta delta-up">↑ 18% from last week</div>
+    </div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-ico green">✅</div>
+    <div>
+      <div class="stat-val" style="color:var(--safe)">{{ safe }}</div>
+      <div class="stat-lbl">Safe Apps</div>
+      <div class="stat-delta delta-up">{% if total > 0 %}{{ safe|floatformat:0 }}% of total{% endif %}</div>
+    </div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-ico amber">⚠️</div>
+    <div>
+      <div class="stat-val" style="color:var(--amber)">{{ medium }}</div>
+      <div class="stat-lbl">Medium Risk</div>
+      <div class="stat-delta" style="color:var(--amber)">{% if total > 0 %}{{ medium }}% of total{% endif %}</div>
+    </div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-ico red">🚨</div>
+    <div>
+      <div class="stat-val" style="color:var(--accent2)">{{ dangerous }}</div>
+      <div class="stat-lbl">High Risk</div>
+      <div class="stat-delta" style="color:var(--accent2)">{% if total > 0 %}{{ dangerous }}% of total{% endif %}</div>
+    </div>
+  </div>
+</div>
+
+<!-- CHARTS -->
+<div class="charts-row">
+  <div class="chart-card">
+    <div class="chart-title">Risk Distribution</div>
+    <div class="chart-wrap" style="display:flex;align-items:center;gap:20px;">
+      <div style="width:160px;height:160px;flex-shrink:0;position:relative;">
+        <canvas id="riskDonut"></canvas>
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;">
+          <div style="font-size:22px;font-weight:800;">{{ total }}</div>
+          <div style="font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;">Total</div>
+        </div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:10px;">
+        <div><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;"><span style="color:var(--safe)">● Safe</span><span>{{ safe }} ({% if total > 0 %}{{ safe|floatformat:0 }}{% else %}0{% endif %}%)</span></div><div class="prog"><div class="prog-fill prog-safe" style="width:{% if total > 0 %}{{ safe|floatformat:0 }}{% else %}0{% endif %}%"></div></div></div>
+        <div><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;"><span style="color:var(--amber)">● Medium Risk</span><span>{{ medium }}</span></div><div class="prog"><div class="prog-fill prog-medium" style="width:{% if total > 0 %}{{ medium|floatformat:0 }}{% else %}0{% endif %}%"></div></div></div>
+        <div><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;"><span style="color:var(--accent2)">● High Risk</span><span>{{ dangerous }}</span></div><div class="prog"><div class="prog-fill prog-danger" style="width:{% if total > 0 %}{{ dangerous|floatformat:0 }}{% else %}0{% endif %}%"></div></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="chart-card">
+    <div class="chart-title">Scans Over Time</div>
+    <div class="chart-wrap"><canvas id="scanLine"></canvas></div>
+  </div>
+</div>
+
+<!-- RECENT SCANS TABLE -->
+<div class="recent-card">
+  <div class="recent-head">
+    <div class="recent-title">Recent Scans</div>
+    <a href="/apk/history/" class="btn btn-outline btn-sm">View All</a>
+  </div>
+  {% if recent %}
+  <table class="tbl">
+    <thead>
+      <tr>
+        <th>App Name</th><th>Package Name</th><th>Risk Level</th><th>Score</th><th>Permissions</th><th>Scanned At</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for app in recent %}
+      <tr>
+        <td>
+          <div class="app-cell">
+            <div class="app-ico">📱</div>
+            <div><div class="app-name">{{ app.app_name }}</div></div>
+          </div>
+        </td>
+        <td style="font-size:11px;color:var(--text2)">{{ app.package_name|default:"-"|truncatechars:24 }}</td>
+        <td>
+          {% if app.risk_level == 'safe' %}<span class="badge badge-safe">✅ Safe</span>
+          {% elif app.risk_level == 'medium' %}<span class="badge badge-medium">⚠️ Medium</span>
+          {% else %}<span class="badge badge-dangerous">🚨 High</span>{% endif %}
+        </td>
+        <td>
+          <div style="display:flex;align-items:center;gap:7px;">
+            <div class="prog" style="width:60px"><div class="prog-fill {% if app.risk_level == 'safe' %}prog-safe{% elif app.risk_level == 'medium' %}prog-medium{% else %}prog-danger{% endif %}" style="width:{{ app.risk_score|floatformat:0 }}%"></div></div>
+            <span style="font-size:11px;font-weight:600;">{{ app.risk_score|floatformat:1 }}</span>
+          </div>
+        </td>
+        <td style="font-size:11px">{{ app.total_permissions }} <span style="color:var(--accent2)">({{ app.dangerous_permissions_count }} high)</span></td>
+        <td style="font-size:11px;color:var(--text2)">{{ app.scanned_at|date:"M d, Y H:i" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div style="padding:60px;text-align:center;">
+    <div style="font-size:36px;margin-bottom:12px;opacity:.4">🔍</div>
+    <div style="font-size:14px;font-weight:700;margin-bottom:6px;">No scans yet</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:18px;">Scan your first loan app to get started</div>
+    <a href="/apk/upload/" class="btn btn-primary"><i class="fas fa-search"></i> Scan First App</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Donut
+const dCtx = document.getElementById('riskDonut').getContext('2d');
+new Chart(dCtx,{type:'doughnut',data:{labels:['Safe','Medium','High Risk'],datasets:[{data:[{{safe}},{{medium}},{{dangerous}}],backgroundColor:['rgba(46,213,115,.75)','rgba(255,165,2,.75)','rgba(255,71,87,.75)'],borderWidth:0,hoverOffset:4}]},options:{cutout:'72%',plugins:{legend:{display:false}},maintainAspectRatio:true}});
+
+// Line
+const labels=[];
+for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);labels.push(d.toLocaleDateString('en',{weekday:'short',month:'short',day:'numeric'}));}
+const lCtx=document.getElementById('scanLine').getContext('2d');
+const grad=lCtx.createLinearGradient(0,0,0,200);
+grad.addColorStop(0,'rgba(79,110,247,.3)');grad.addColorStop(1,'rgba(79,110,247,.0)');
+new Chart(lCtx,{type:'line',data:{labels,datasets:[{label:'Scans',data:[0,0,0,0,0,0,{{total}}],borderColor:'var(--primary)',backgroundColor:grad,borderWidth:2,pointBackgroundColor:'var(--primary2)',pointRadius:4,tension:.4,fill:true}]},options:{plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(99,108,255,.08)'},ticks:{color:'var(--text2)',font:{size:10}}},y:{grid:{color:'rgba(99,108,255,.08)'},ticks:{color:'var(--text2)',font:{size:10}},beginAtZero:true}}}});
+</script>
+{% endblock %}

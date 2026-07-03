@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login – LoanGuard AI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    :root{--bg:#07071a;--bg2:#0d0d2b;--bg3:#11113a;--primary:#4f6ef7;--primary2:#6c7fff;--accent:#00d4aa;--accent2:#ff4757;--safe:#2ed573;--text:#e8eaff;--text2:#7b82b5;--border:rgba(99,108,255,0.18);}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;}
+
+    /* LEFT PANEL */
+    .auth-left{
+      flex:1;
+      background:linear-gradient(160deg,#07071a 0%,#0a0a2a 40%,#0d0d3a 100%);
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      padding:60px;position:relative;overflow:hidden;
+    }
+    .auth-left::before{
+      content:'';position:absolute;
+      width:600px;height:600px;border-radius:50%;
+      background:radial-gradient(circle,rgba(79,110,247,.12),transparent 70%);
+      top:50%;left:50%;transform:translate(-50%,-50%);
+    }
+    .auth-left::after{
+      content:'';position:absolute;
+      width:300px;height:300px;border-radius:50%;
+      background:radial-gradient(circle,rgba(0,212,170,.06),transparent 70%);
+      top:20%;right:10%;
+    }
+    .hero-shield{
+      position:relative;z-index:1;margin-bottom:32px;
+      filter:drop-shadow(0 0 40px rgba(79,110,247,.5));
+    }
+    .shield-svg{width:140px;height:140px;}
+    .hero-title{
+      font-size:2.4rem;font-weight:800;color:var(--text);
+      text-align:center;line-height:1.1;margin-bottom:8px;
+      position:relative;z-index:1;
+    }
+    .hero-sub{font-size:14px;color:var(--text2);text-align:center;margin-bottom:40px;position:relative;z-index:1;}
+    .features{display:flex;flex-direction:column;gap:10px;width:100%;max-width:320px;position:relative;z-index:1;}
+    .feat{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text2);}
+    .feat i{color:var(--accent);font-size:13px;width:16px;}
+
+    /* RIGHT PANEL */
+    .auth-right{
+      width:440px;background:var(--bg2);
+      display:flex;align-items:center;justify-content:center;
+      padding:60px 48px;border-left:1px solid var(--border);
+    }
+    .auth-form{width:100%;}
+    .form-brand{display:flex;align-items:center;gap:10px;margin-bottom:28px;}
+    .form-brand-icon{
+      width:36px;height:36px;border-radius:9px;
+      background:linear-gradient(135deg,var(--primary),var(--accent));
+      display:flex;align-items:center;justify-content:center;font-size:17px;
+    }
+    .form-brand-name{font-size:15px;font-weight:700;}
+    .form-title{font-size:22px;font-weight:800;margin-bottom:4px;}
+    .form-sub{font-size:12px;color:var(--text2);margin-bottom:28px;}
+
+    .f-group{margin-bottom:16px;}
+    .f-label{display:block;font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;}
+    .f-wrap{position:relative;}
+    .f-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--text2);font-size:13px;}
+    .f-input{
+      width:100%;background:var(--bg3);border:1px solid var(--border);
+      border-radius:8px;padding:11px 14px 11px 38px;color:var(--text);
+      font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:border-color .2s;
+    }
+    .f-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(79,110,247,.12);}
+    .f-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+    .f-check{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text2);}
+    .f-check input{accent-color:var(--primary);}
+    .f-forgot{font-size:12px;color:var(--primary2);text-decoration:none;}
+    .f-forgot:hover{text-decoration:underline;}
+    .btn-submit{
+      width:100%;background:linear-gradient(135deg,var(--primary),var(--primary2));
+      color:#fff;border:none;border-radius:8px;padding:13px;
+      font-family:'Inter',sans-serif;font-size:13px;font-weight:700;
+      cursor:pointer;transition:all .2s;
+    }
+    .btn-submit:hover{opacity:.9;transform:translateY(-1px);box-shadow:0 6px 20px rgba(79,110,247,.4);}
+    .f-switch{text-align:center;margin-top:20px;font-size:12px;color:var(--text2);}
+    .f-switch a{color:var(--primary2);text-decoration:none;font-weight:600;}
+    .f-switch a:hover{text-decoration:underline;}
+    .err{background:rgba(255,71,87,.1);border:1px solid rgba(255,71,87,.25);border-radius:7px;padding:9px 12px;margin-bottom:14px;font-size:11px;color:#ff4757;list-style:none;}
+  </style>
+</head>
+<body>
+<div class="auth-left">
+  <div class="hero-shield">
+    <svg class="shield-svg" viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="sg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#4f6ef7"/><stop offset="100%" stop-color="#00d4aa"/></linearGradient>
+        <filter id="glow"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs>
+      <path d="M70 10 L120 30 L120 75 C120 105 70 130 70 130 C70 130 20 105 20 75 L20 30 Z" fill="url(#sg)" opacity=".15" filter="url(#glow)"/>
+      <path d="M70 18 L112 35 L112 75 C112 101 70 123 70 123 C70 123 28 101 28 75 L28 35 Z" fill="none" stroke="url(#sg)" stroke-width="2"/>
+      <path d="M52 70 L64 82 L90 58" stroke="#00d4aa" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+  <h1 class="hero-title">LoanGuard AI</h1>
+  <p class="hero-sub">Smarter Loans. Safer Tomorrow.</p>
+  <div class="features">
+    <div class="feat"><i class="fas fa-microchip"></i>AI-powered APK analysis</div>
+    <div class="feat"><i class="fas fa-exclamation-triangle"></i>Real-time fraud detection</div>
+    <div class="feat"><i class="fas fa-comments"></i>NLP scam review detection</div>
+  </div>
+</div>
+
+<div class="auth-right">
+  <div class="auth-form">
+    <div class="form-brand">
+      <div class="form-brand-icon">🛡️</div>
+      <div class="form-brand-name">LoanGuard AI</div>
+    </div>
+    <div class="form-title">Welcome back 👋</div>
+    <div class="form-sub">Sign in to your LoanGuard AI account</div>
+
+    {% if messages %}{% for m in messages %}<ul class="err"><li>{{ m }}</li></ul>{% endfor %}{% endif %}
+
+    <form method="POST">{% csrf_token %}
+      <div class="f-group">
+        <label class="f-label">Username</label>
+        <div class="f-wrap">
+          <i class="fas fa-user f-icon"></i>
+          <input type="text" name="username" class="f-input" placeholder="admin" required>
+        </div>
+        {% if form.username.errors %}<ul class="err">{% for e in form.username.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+      </div>
+      <div class="f-group">
+        <label class="f-label">Password</label>
+        <div class="f-wrap">
+          <i class="fas fa-lock f-icon"></i>
+          <input type="password" name="password" class="f-input" placeholder="••••••••" required>
+        </div>
+        {% if form.password.errors %}<ul class="err">{% for e in form.password.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+      </div>
+      <div class="f-row">
+        <label class="f-check"><input type="checkbox" name="remember"> Remember me</label>
+        <a href="#" class="f-forgot">Forgot password?</a>
+      </div>
+      <button type="submit" class="btn-submit">Sign In</button>
+    </form>
+    <div class="f-switch">Don't have an account? <a href="/accounts/register/">Create one</a></div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Register – LoanGuard AI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    :root{--bg:#07071a;--bg2:#0d0d2b;--bg3:#11113a;--primary:#4f6ef7;--primary2:#6c7fff;--accent:#00d4aa;--accent2:#ff4757;--text:#e8eaff;--text2:#7b82b5;--border:rgba(99,108,255,0.18);}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;}
+    .reg-box{width:100%;max-width:460px;background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:36px 40px;}
+    .reg-brand{display:flex;align-items:center;gap:9px;margin-bottom:24px;}
+    .reg-brand-icon{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,var(--primary),var(--accent));display:flex;align-items:center;justify-content:center;font-size:16px;}
+    .reg-title{font-size:20px;font-weight:800;margin-bottom:4px;}
+    .reg-sub{font-size:12px;color:var(--text2);margin-bottom:24px;}
+    .f-group{margin-bottom:14px;}
+    .f-label{display:block;font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;}
+    .f-wrap{position:relative;}
+    .f-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text2);font-size:12px;}
+    .f-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 13px 10px 34px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:border-color .2s;}
+    .f-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(79,110,247,.1);}
+    .btn-submit{width:100%;background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;border:none;border-radius:8px;padding:12px;font-family:'Inter',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;margin-top:6px;}
+    .btn-submit:hover{opacity:.9;transform:translateY(-1px);}
+    .f-switch{text-align:center;margin-top:16px;font-size:12px;color:var(--text2);}
+    .f-switch a{color:var(--primary2);text-decoration:none;font-weight:600;}
+    .err{background:rgba(255,71,87,.1);border:1px solid rgba(255,71,87,.25);border-radius:7px;padding:8px 12px;margin-bottom:12px;font-size:11px;color:#ff4757;list-style:none;}
+  </style>
+</head>
+<body>
+<div class="reg-box">
+  <div class="reg-brand"><div class="reg-brand-icon">🛡️</div><div><div style="font-size:14px;font-weight:700;">LoanGuard AI</div><div style="font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.1em;">Fraud Detection</div></div></div>
+  <div class="reg-title">Create Account</div>
+  <div class="reg-sub">Join LoanGuard AI to protect yourself from fake loan apps</div>
+  {% if messages %}{% for m in messages %}<ul class="err"><li>{{ m }}</li></ul>{% endfor %}{% endif %}
+  <form method="POST">{% csrf_token %}
+    <div class="f-group">
+      <label class="f-label">Username</label>
+      <div class="f-wrap"><i class="fas fa-user f-icon"></i><input type="text" name="username" class="f-input" placeholder="Choose a username" required></div>
+      {% if form.username.errors %}<ul class="err">{% for e in form.username.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+    </div>
+    <div class="f-group">
+      <label class="f-label">Email</label>
+      <div class="f-wrap"><i class="fas fa-envelope f-icon"></i><input type="email" name="email" class="f-input" placeholder="your@email.com"></div>
+    </div>
+    <div class="f-group">
+      <label class="f-label">Password</label>
+      <div class="f-wrap"><i class="fas fa-lock f-icon"></i><input type="password" name="password1" class="f-input" placeholder="Create a password" required></div>
+      {% if form.password1.errors %}<ul class="err">{% for e in form.password1.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+    </div>
+    <div class="f-group">
+      <label class="f-label">Confirm Password</label>
+      <div class="f-wrap"><i class="fas fa-lock f-icon"></i><input type="password" name="password2" class="f-input" placeholder="Confirm your password" required></div>
+      {% if form.password2.errors %}<ul class="err">{% for e in form.password2.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+    </div>
+    <button type="submit" class="btn-submit">Create Account</button>
+  </form>
+  <div class="f-switch">Already have an account? <a href="/accounts/login/">Sign in</a></div>
+</div>
+</body>
+</html>

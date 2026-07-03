@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block title %}Admin Panel – LoanGuard AI{% endblock %}
+{% block page_title %}Admin Panel{% endblock %}
+{% block page_sub %}System administration and management{% endblock %}
+
+{% block extra_css %}
+<style>
+.admin-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+.adm-stat{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;display:flex;align-items:center;gap:12px;}
+.adm-ico{width:40px;height:40px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.adm-ico.blue{background:rgba(79,110,247,.15);}
+.adm-ico.red{background:rgba(255,71,87,.15);}
+.adm-ico.cyan{background:rgba(0,212,170,.15);}
+.adm-ico.green{background:rgba(46,213,115,.15);}
+.adm-val{font-size:22px;font-weight:800;}
+.adm-lbl{font-size:10px;color:var(--text2);}
+.adm-delta{font-size:10px;margin-top:2px;}
+.admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.admin-section{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;}
+.admin-section-title{font-size:12px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:7px;}
+.admin-action-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(99,108,255,.07);}
+.admin-action-row:last-child{border-bottom:none;}
+.admin-action-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.admin-action-name{font-size:12px;font-weight:600;margin-bottom:2px;}
+.admin-action-sub{font-size:10px;color:var(--text2);}
+.health-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--safe);margin-right:5px;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-stats">
+  <div class="adm-stat">
+    <div class="adm-ico blue">👥</div>
+    <div><div class="adm-val" style="color:var(--primary2)">{{ total_users|default:15 }}</div><div class="adm-lbl">Total Users</div><div class="adm-delta" style="color:var(--safe)">↑ 2 new</div></div>
+  </div>
+  <div class="adm-stat">
+    <div class="adm-ico cyan">🔍</div>
+    <div><div class="adm-val">{{ total_scans|default:128 }}</div><div class="adm-lbl">Total Scans</div><div class="adm-delta" style="color:var(--safe)">↑ 18%</div></div>
+  </div>
+  <div class="adm-stat">
+    <div class="adm-ico red">📋</div>
+    <div><div class="adm-val" style="color:var(--accent2)">{{ total_reports|default:5 }}</div><div class="adm-lbl">Reports</div><div class="adm-delta" style="color:var(--accent2)">↑ 23%</div></div>
+  </div>
+  <div class="adm-stat">
+    <div class="adm-ico green">💚</div>
+    <div><div class="adm-val" style="color:var(--safe)">Healthy</div><div class="adm-lbl">System Status</div><div class="adm-delta" style="color:var(--safe)">All systems operational</div></div>
+  </div>
+</div>
+
+<div class="admin-grid">
+  <div class="admin-section">
+    <div class="admin-section-title"><i class="fas fa-users" style="color:var(--primary2)"></i> User Management</div>
+    <div class="admin-action-row">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="admin-action-icon" style="background:rgba(79,110,247,.12)"><i class="fas fa-users" style="color:var(--primary2)"></i></div>
+        <div><div class="admin-action-name">Manage system users</div></div>
+      </div>
+      <a href="/admin/accounts/customuser/" class="btn btn-outline btn-sm">View Users</a>
+    </div>
+    <div class="admin-action-row">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="admin-action-icon" style="background:rgba(255,71,87,.12)"><i class="fas fa-flag" style="color:var(--accent2)"></i></div>
+        <div><div class="admin-action-name">Review and manage reports</div></div>
+      </div>
+      <a href="/admin/community/" class="btn btn-outline btn-sm">View Reports</a>
+    </div>
+  </div>
+
+  <div class="admin-section">
+    <div class="admin-section-title"><i class="fas fa-cog" style="color:var(--primary2)"></i> System Settings</div>
+    <div class="admin-action-row">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="admin-action-icon" style="background:rgba(0,212,170,.12)"><i class="fas fa-sliders-h" style="color:var(--accent)"></i></div>
+        <div><div class="admin-action-name">Configure system preferences</div></div>
+      </div>
+      <a href="/admin/" class="btn btn-outline btn-sm">Settings</a>
+    </div>
+    <div class="admin-action-row">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="admin-action-icon" style="background:rgba(46,213,115,.12)"><i class="fas fa-file-alt" style="color:var(--safe)"></i></div>
+        <div><div class="admin-action-name">View system activity logs</div></div>
+      </div>
+      <a href="/admin/" class="btn btn-outline btn-sm">Audit Logs</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
